@@ -1,9 +1,20 @@
-void setup() {
-  // put your setup code here, to run once:
+#include <SoftwareSerial.h>
 
+SoftwareSerial BTserial(2, 3);
+
+void setup() {
+  Serial.begin(9600);
+  Serial.println("Arduino Bluetooth demo is running");
+  BTserial.begin(9600);
 }
 
 void loop() {
-  // put your main code here, to run repeatedly:
+  int sensorValue = analogRead(A0);
+  float voltage = sensorValue * (5.0 / 1023.0);
 
+  BTserial.print(voltage);
+  BTserial.println(':');
+  
+  delay(1000);
+  Serial.println(voltage);
 }
