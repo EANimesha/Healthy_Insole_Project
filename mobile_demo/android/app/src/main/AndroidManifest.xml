@@ -1,4 +1,10 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
+<!-- this line -->
+    xmlns:tools="http://schemas.android.com/tools">
+
+    <!-- and this line -->
+    <uses-sdk tools:overrideLibrary="io.github.edufolly.flutterbluetoothserial"/>
+    
     package="com.example.mobile_demo">
 
     <!-- io.flutter.app.FlutterApplication is an android.app.Application that
