@@ -1,6 +1,6 @@
 #include <SoftwareSerial.h>
 
-SoftwareSerial BTserial(2, 3);//rx tx
+SoftwareSerial BTserial(2, 3);//tx rx
 
 void setup() {
   Serial.begin(9600);
