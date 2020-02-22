@@ -1,0 +1,2 @@
+https://wingoodharry.wordpress.com/2014/04/15/android-sendreceive-data-with-arduino-using-bluetooth-part-2/
+https://wingoodharry.wordpress.com/2014/04/07/anrdroid-sendreceive-data-with-arduino-via-bluetooth-part-1/

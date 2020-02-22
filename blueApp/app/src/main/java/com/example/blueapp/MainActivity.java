@@ -15,6 +15,9 @@ import android.os.Handler;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
 import java.util.Set;
 import java.util.UUID;
 
@@ -28,12 +31,24 @@ public class MainActivity extends Activity {
     private InputStream inputStream;
     Button startButton, sendButton,clearButton,stopButton;
     TextView textView;
-    EditText editText;
+    TextView textView2;
+    TextView text1;
+    TextView text2;
+    TextView text3;
     boolean deviceConnected=false;
     Thread thread;
     byte buffer[];
     int bufferPosition;
     boolean stopThread;
+    int sensorCount =3;
+    List<Integer> totalPressure = new ArrayList<>(Arrays.asList(0,0,0));
+    List<Integer> avgs= new ArrayList<>(Arrays.asList(0,0,0));
+    List<Integer> savedAvgs= new ArrayList<>(Arrays.asList(0,0,0));
+    String status="normal";
+    int count=0;
+
+
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -42,10 +57,21 @@ public class MainActivity extends Activity {
         sendButton = (Button) findViewById(R.id.buttonSend);
         clearButton = (Button) findViewById(R.id.buttonClear);
         stopButton = (Button) findViewById(R.id.buttonStop);
-        editText = (EditText) findViewById(R.id.editText);
         textView = (TextView) findViewById(R.id.textView);
+        textView2 = (TextView) findViewById(R.id.textView2);
+        text1=(TextView)findViewById(R.id.text1);
+        text2=(TextView)findViewById(R.id.text2);
+        text3=(TextView)findViewById(R.id.text3);
+
         setUiEnabled(false);
 
+        sendButton.setOnClickListener(new View.OnClickListener(){
+            @Override
+            public void onClick(View view) {
+                saveCurrentAvg();
+                Toast.makeText(MainActivity.this, "saved....!", Toast.LENGTH_SHORT).show();
+            }
+        });
     }
 
     public void setUiEnabled(boolean bool)
@@ -142,28 +168,53 @@ public class MainActivity extends Activity {
         final Handler handler = new Handler();
         stopThread = false;
         buffer = new byte[1024];
+
+
+
+
+
         Thread thread  = new Thread(new Runnable()
         {
             public void run()
             {
+                int total=0;
+                String str = "";
+
                 while(!Thread.currentThread().isInterrupted() && !stopThread)
                 {
+
                     try
                     {
+
                         int byteCount = inputStream.available();
-                        if(byteCount > 0)
-                        {
+                        if(byteCount>0 && total<(sensorCount*4)){
                             byte[] rawBytes = new byte[byteCount];
-                            inputStream.read(rawBytes);
-                            final String string=new String(rawBytes,"UTF-8");
+                            int bytes = inputStream.read(rawBytes);
+                            String readMessage = new String(rawBytes, 0, bytes);
+                            str+= readMessage;
+                            total+=byteCount;
+                        }else if(total>=(sensorCount*4)){
+                            final String st = str;
+                            count++;
                             handler.post(new Runnable() {
                                 public void run()
                                 {
 //                                    textView.append(string);
-                                    textView.setText(string);
+                                    textView.setText("InputData : "+st+" avg : "+avgs.toString());
+                                    text1.setText("SENSOR 1 :  "+avgs.get(0));
+                                    text2.setText("SENSOR 1 :  "+avgs.get(1));
+                                    text3.setText("SENSOR 1 :  "+avgs.get(2));
                                 }
                             });
-
+                            setTotalPressureList(getIntListFromString(st));
+                            if(count==5){
+                                count=0;
+                                setAvgPressure();
+                                System.out.println("avg pressure is :"+avgs);
+                            }
+                            System.out.println(str);
+                            str="";
+                            total=0;
                         }
                     }
                     catch (IOException ex)
@@ -178,14 +229,14 @@ public class MainActivity extends Activity {
     }
 
     public void onClickSend(View view) {
-        String string = editText.getText().toString();
-        string.concat("\n");
-        try {
-            outputStream.write(string.getBytes());
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
-        textView.append("\nSent Data:"+string+"\n");
+//        String string = editText.getText().toString();
+//        string.concat("\n");
+//        try {
+//            outputStream.write(string.getBytes());
+//        } catch (IOException e) {
+//            e.printStackTrace();
+//        }
+//        textView.append("\nSent Data:"+string+"\n");
 
     }
 
@@ -202,4 +253,72 @@ public class MainActivity extends Activity {
     public void onClickClear(View view) {
         textView.setText("");
     }
+
+    public List<Integer> getIntListFromString(String st){
+        List<Integer> result = new ArrayList<>();
+        try{
+            int sensor_1 = Integer.parseInt(st.substring(1,4));
+            int sensor_2 = Integer.parseInt(st.substring(5,8));
+            int sensor_3 = Integer.parseInt(st.substring(9,12));
+            result.add(sensor_1);
+            result.add(sensor_2);
+            result.add(sensor_3);
+            return result;
+        }catch (Exception e){
+            System.out.println("error in conversion");
+            return result;
+        }
+    }
+
+
+    public void setTotalPressureList(List<Integer> list){
+        System.out.println("total pressure is : "+totalPressure);
+        try {
+            for(int i =0;i<sensorCount;i++){
+                totalPressure.set(i,totalPressure.get(i)+list.get(i));
+            }
+        }catch (Exception e){
+            System.out.println("error in adding to total");
+        }
+    }
+    public void setAvgPressure(){
+//        System.out.println(totalPressure);
+        try {
+            int attentionCount=0;
+
+            for(int i =0;i<sensorCount;i++){
+                avgs.set(i,(totalPressure.get(i)/5));
+                if(savedAvgs.get(0)!=0 && Math.abs(savedAvgs.get(i)-avgs.get(i))>50) {
+                    attentionCount++;
+                }
+            }
+            if(attentionCount!=-1){
+                status="Attentions LL>>>>";
+                setStatus();
+            }else{
+                status="normal";
+                setStatus();
+            }
+            totalPressure = new ArrayList<>(Arrays.asList(0,0,0));
+        }catch (Exception e){
+            System.out.println("error in setting avg");
+        }
+    }
+
+    public void saveCurrentAvg(){
+        savedAvgs = avgs;
+        System.out.println("saved argss is "+savedAvgs);
+    }
+
+    public void setStatus(){
+        runOnUiThread(new Runnable() {
+            @Override
+            public void run() {
+                textView2.setText(status);
+            }
+        });
+
+    }
+
+
 }
