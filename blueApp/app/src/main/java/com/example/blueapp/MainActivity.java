@@ -6,6 +6,7 @@ import android.bluetooth.BluetoothDevice;
 import android.bluetooth.BluetoothSocket;
 import android.content.Intent;
 import android.os.Bundle;
+import android.text.Html;
 import android.view.View;
 import android.widget.Button;
 import android.widget.EditText;
@@ -40,10 +41,10 @@ public class MainActivity extends Activity {
     byte buffer[];
     int bufferPosition;
     boolean stopThread;
-    int sensorCount =3;
-    List<Integer> totalPressure = new ArrayList<>(Arrays.asList(0,0,0));
-    List<Integer> avgs= new ArrayList<>(Arrays.asList(0,0,0));
-    List<Integer> savedAvgs= new ArrayList<>(Arrays.asList(0,0,0));
+    int sensorCount =6;
+    List<Integer> totalPressure = new ArrayList<>(Arrays.asList(0,0,0,0,0,0));
+    List<Integer> avgs= new ArrayList<>(Arrays.asList(0,0,0,0,0,0));
+    List<Integer> savedAvgs= new ArrayList<>(Arrays.asList(0,0,0,0,0,0));
     String status="normal";
     int count=0;
 
@@ -69,6 +70,7 @@ public class MainActivity extends Activity {
             @Override
             public void onClick(View view) {
                 saveCurrentAvg();
+                setStatus("normal");
                 Toast.makeText(MainActivity.this, "saved....!", Toast.LENGTH_SHORT).show();
             }
         });
@@ -199,20 +201,18 @@ public class MainActivity extends Activity {
                             handler.post(new Runnable() {
                                 public void run()
                                 {
-//                                    textView.append(string);
-                                    textView.setText("InputData : "+st+" avg : "+avgs.toString());
-                                    text1.setText("SENSOR 1 :  "+avgs.get(0));
-                                    text2.setText("SENSOR 1 :  "+avgs.get(1));
-                                    text3.setText("SENSOR 1 :  "+avgs.get(2));
+                                    textView.setText(st+"\navg : "+avgs.toString());
+                                    text3.setText("SENSOR 1 :  "+avgs.get(0)+"\nSENSOR 2 :  "+avgs.get(1)+"\nSENSOR 3 :  "+avgs.get(2)+"\nSENSOR 4 :  "+avgs.get(3)
+                                    +"\nSENSOR 5 :  "+avgs.get(4));
                                 }
                             });
                             setTotalPressureList(getIntListFromString(st));
                             if(count==5){
                                 count=0;
                                 setAvgPressure();
-                                System.out.println("avg pressure is :"+avgs);
+//                                System.out.println("avg pressure is :"+avgs);
                             }
-                            System.out.println(str);
+//                            System.out.println(st);
                             str="";
                             total=0;
                         }
@@ -260,9 +260,18 @@ public class MainActivity extends Activity {
             int sensor_1 = Integer.parseInt(st.substring(1,4));
             int sensor_2 = Integer.parseInt(st.substring(5,8));
             int sensor_3 = Integer.parseInt(st.substring(9,12));
+            int sensor_4 = Integer.parseInt(st.substring(13,16));
+            int sensor_5 = Integer.parseInt(st.substring(17,20));
+            int sensor_6 = Integer.parseInt(st.substring(21,23));
+
+
             result.add(sensor_1);
             result.add(sensor_2);
             result.add(sensor_3);
+            result.add(sensor_4);
+            result.add(sensor_5);
+            result.add(sensor_6);
+
             return result;
         }catch (Exception e){
             System.out.println("error in conversion");
@@ -272,7 +281,7 @@ public class MainActivity extends Activity {
 
 
     public void setTotalPressureList(List<Integer> list){
-        System.out.println("total pressure is : "+totalPressure);
+//        System.out.println("total pressure is : "+totalPressure);
         try {
             for(int i =0;i<sensorCount;i++){
                 totalPressure.set(i,totalPressure.get(i)+list.get(i));
@@ -288,33 +297,48 @@ public class MainActivity extends Activity {
 
             for(int i =0;i<sensorCount;i++){
                 avgs.set(i,(totalPressure.get(i)/5));
-                if(savedAvgs.get(0)!=0 && Math.abs(savedAvgs.get(i)-avgs.get(i))>50) {
+                System.out.println(savedAvgs.get(i)+"  "+avgs.get(i));
+                if(savedAvgs.get(i)!=0 && Math.abs(savedAvgs.get(i)-avgs.get(i))>50) {
                     attentionCount++;
                 }
             }
-            if(attentionCount!=-1){
-                status="Attentions LL>>>>";
-                setStatus();
+            if(attentionCount!=0){
+                status="Attentions";
+                setStatus("Attentions");
             }else{
                 status="normal";
-                setStatus();
+                setStatus("normal");
             }
-            totalPressure = new ArrayList<>(Arrays.asList(0,0,0));
+            totalPressure = new ArrayList<>(Arrays.asList(0,0,0,0,0,0));
         }catch (Exception e){
             System.out.println("error in setting avg");
         }
     }
 
     public void saveCurrentAvg(){
-        savedAvgs = avgs;
-        System.out.println("saved argss is "+savedAvgs);
-    }
-
-    public void setStatus(){
+        savedAvgs = new ArrayList<>();
+        for(int i =0;i<sensorCount;i++){
+            savedAvgs.add(avgs.get(i));
+        }
         runOnUiThread(new Runnable() {
             @Override
             public void run() {
-                textView2.setText(status);
+
+                text1.setText("Normal Averages "+savedAvgs.toString());
+                text2.setText("Temp :"+savedAvgs.get(5).toString());
+            }
+        });
+
+        System.out.println("saved avgs is "+savedAvgs);
+    }
+
+    public void setStatus(String st){
+        final String str = st;
+        System.out.println(st);
+        runOnUiThread(new Runnable() {
+            @Override
+            public void run() {
+                textView2.setText(str);
             }
         });
 
