@@ -4,7 +4,7 @@
 
 DHT dht(DHTPIN, DHTTYPE);
 
-int fsrPin[]={0,1,2}; 
+int fsrPin[]={0,1,2,3,4}; 
 
 int fsrReading;     // the analog reading from the FSR resistor divider
 int fsrVoltage;     // the analog reading converted to voltage
@@ -16,12 +16,12 @@ String str="";
 
 void setup(void) {
   Serial.begin(9600);   // We'll send debugging information via the Serial monitor
-//  dht.begin();
+  dht.begin();
 }
  
 void loop(void) {
     str="";
-  for(byte i=0;i<3;i=i+1){
+  for(byte i=0;i<5;i=i+1){
     str+="_";
     fsrReading = analogRead(fsrPin[i]); 
     fsrVoltage = map(fsrReading, 0, 1023, 0, 5000);
@@ -44,45 +44,14 @@ void loop(void) {
       }else{
         str+="999";
       }
-      
-//      Serial.println(fsrResistance);
     }
   }
-//
-////temperature sensor
-//  delay(2000);
 //  float h = dht.readHumidity();
-//  float t = dht.readTemperature();
-//  float f = dht.readTemperature(true);
-//
-//  if (isnan(h) || isnan(t) || isnan(f)) {
-//    Serial.println("Failed to read from DHT sensor!");
-//    return;
-//  }
-//
-//  float hif = dht.computeHeatIndex(f, h);
-//  float hic = dht.computeHeatIndex(t, h, false);
-//
-//  Serial.print("Humidity: ");
-//  Serial.print(h);
-//  Serial.print(" %\t");
-//  Serial.print("Temperature: ");
-//  Serial.print(t);
-//  Serial.print(" *C ");
-//  Serial.print(f);
-//  Serial.print(" *F\t");
-//  Serial.print("Heat index: ");
-//  Serial.print(hic);
-//  Serial.print(" *C ");
-//  Serial.print(hif);
-//  Serial.println(" *F");
-//
-//  Serial.println("--------------------");
-//  delay(2000);
+  int t = dht.readTemperature();
+  int f = dht.readTemperature(true);
 
-
+    str+="_";
+    str+=t;
     Serial.println(str);
     delay(1000);
-//    Serial.println("#123_234_123_123_123_d12~");
-//    delay(10000);
 }
